@@ -222,3 +222,11 @@ func errorMsg(errType string) string {
 		return "-ERR unknown command '%s'\r\n"
 	}
 }
+
+func wrongNumberArgsMsg(command string) string {
+	return fmt.Sprintf("-ERR wrong number of arguments for '%s' command\r\n", command)
+}
+
+func pingMsg() string {
+	return "+PONG\r\n"
+}
