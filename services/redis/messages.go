@@ -218,6 +218,8 @@ func errorMsg(errType string) string {
 	switch errType {
 	case "syntax":
 		return "-ERR syntax error\r\n"
+	case "wgnumber":
+		return "-ERR wrong number of arguments for '%s' command\r\n"
 	default:
 		return "-ERR unknown command '%s'\r\n"
 	}

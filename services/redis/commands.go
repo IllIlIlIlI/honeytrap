@@ -37,7 +37,10 @@ import (
 type cmd func(*redisService, []interface{}) (string, bool)
 
 var mapCmds = map[string]cmd{
-	"info": (*redisService).infoCmd,
+	"info":     (*redisService).infoCmd,
+	"flushall": (*redisService).flushallCmd,
+	"save":     (*redisService).saveCmd,
+	"set":      (*redisService).setCmd,
 	// ...
 }
 
@@ -74,6 +77,48 @@ func (s *redisService) infoCmd(args []interface{}) (string, bool) {
 		} else {
 			return fmt.Sprintf(lenMsg(), len(lineBreakMsg()), lineBreakMsg()), false
 		}
+	default:
+		return errorMsg("syntax"), false
+	}
+}
+
+func (s *redisService) flushallCmd(args []interface{}) (string, bool) {
+	switch len(args) {
+	case 0:
+		return "+OK\r\n", false
+	case 1:
+		_word := args[0].(redisDatum)
+		word, success := _word.ToString()
+		if !success {
+			return "Expected string argument, got something else", false
+		}
+		if word == "async" {
+			return "+OK\r\n", false
+		}
+		fallthrough
+	default:
+		return errorMsg("syntax"), false
+
+	}
+}
+
+func (s *redisService) saveCmd(args []interface{}) (string, bool) {
+	switch len(args) {
+	case 0:
+		return "+OK\r\n", false
+	default:
+		return fmt.Sprintf(errorMsg("wgnumber"), "save"), false
+	}
+}
+
+func (s *redisService) setCmd(args []interface{}) (string, bool) {
+	switch len(args) {
+	case 2:
+		return "+OK\r\n", false
+	case 0:
+		fallthrough
+	case 1:
+		return fmt.Sprintf(errorMsg("wgnumber"), "set"), false
 	default:
 		return errorMsg("syntax"), false
 	}
