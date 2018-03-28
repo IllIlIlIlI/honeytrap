@@ -41,6 +41,7 @@ var mapCmds = map[string]cmd{
 	"flushall": (*redisService).flushallCmd,
 	"save":     (*redisService).saveCmd,
 	"set":      (*redisService).setCmd,
+	"config":   (*redisService).configCmd,
 	// ...
 }
 
@@ -56,6 +57,13 @@ var mapInfoCmds = map[string]infoSection{
 	"cpu":         (*redisService).infoCPUMsg,
 	"cluster":     (*redisService).infoClusterMsg,
 	"keyspace":    (*redisService).infoKeyspaceMsg,
+}
+
+var mapConfigCmds = map[string]cmd{
+	"get":       (*redisService).configGetCmd,
+	"set":       (*redisService).configSetCmd,
+	"resetstat": (*redisService).configResetstatCmd,
+	"rewrite":   (*redisService).configRewriteCmd,
 }
 
 func (s *redisService) infoCmd(args []interface{}) (string, bool) {
@@ -122,4 +130,37 @@ func (s *redisService) setCmd(args []interface{}) (string, bool) {
 	default:
 		return errorMsg("syntax"), false
 	}
+}
+
+func (s *redisService) configCmd(args []interface{}) (string, bool) {
+	switch len(args) {
+	case 0:
+		return fmt.Sprintf(errorMsg("wgnumber"), "save"), false
+	case 1:
+		_word := args[0].(redisDatum)
+		word, success := _word.ToString()
+		if !success {
+			return "Expected string argument, got something else", false
+		}
+		if word == "async" {
+			return "+OK\r\n", false
+		}
+		fallthrough
+	default:
+		return errorMsg("syntax"), false
+
+	}
+
+}
+
+func (s *redisService) configGetCmd(args []interface{}) (string, bool) {
+}
+
+func (s *redisService) configSetCmd(args []interface{}) (string, bool) {
+}
+
+func (s *redisService) configResetstatCmd(args []interface{}) (string, bool) {
+}
+
+func (s *redisService) configRewriteCmd(args []interface{}) (string, bool) {
 }
