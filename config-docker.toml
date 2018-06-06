@@ -18,6 +18,13 @@ server-name="WS-3244"
 port="tcp/5900"
 services=["telnet"]
 
+[service.mongodb]
+type="mongodb"
+
+[[port]]
+port="tcp/27017"
+services=["mongodb"]
+
 [channel.console]
 type="console"
 
