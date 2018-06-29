@@ -80,6 +80,10 @@ type ethereumService struct {
 	c pushers.Channel
 }
 
+func (s *ethereumService) CanHandle(payload []byte) bool {
+	return bytes.HasPrefix(payload, []byte("POST"))
+}
+
 func (s *ethereumService) SetChannel(c pushers.Channel) {
 	s.c = c
 }
@@ -191,8 +195,6 @@ var ethereumMethods = map[string]func(map[string]interface{}) map[string]interfa
 		}
 	},
 }
-
-// Todo: implement CanHandle
 
 func (s *ethereumService) Handle(ctx context.Context, conn net.Conn) error {
 	defer conn.Close()
