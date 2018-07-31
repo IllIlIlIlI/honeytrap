@@ -18,6 +18,21 @@ server-name="WS-3244"
 port="tcp/5900"
 services=["telnet"]
 
+[service.ethereum]
+type="ethereum"
+
+[[port]]
+port="tcp/8545"
+services=["ethereum"]
+
+[service.couchdb]
+type="couchdb"
+dbs=["1","2"]
+
+[[port]]
+port="tcp/5984"
+services=["couchdb"]
+
 [channel.console]
 type="console"
 
