@@ -85,7 +85,6 @@ var couchdbMethods = map[string]func() interface{}{
 		return []interface{}{
 			"_replicator",
 			"_users",
-			"_baseball",
 		}
 	},
 }
