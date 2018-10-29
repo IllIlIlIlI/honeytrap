@@ -38,12 +38,16 @@ import (
 
 	"github.com/honeytrap/honeytrap/event"
 	"github.com/honeytrap/honeytrap/pushers"
+
+	"github.com/honeytrap/honeytrap/services"
+	"github.com/op/go-logging"
 )
 
 // Documentation: https://developer.valvesoftware.com/wiki/Server_Queries
 
 var (
-	_ = Register("counterstrike", CounterStrike)
+	log = logging.MustGetLogger("services/counterstrike")
+	_ = services.Register("counterstrike", CounterStrike)
 )
 
 const (
@@ -72,9 +76,9 @@ var (
 	}
 )
 
-func CounterStrike(options ...ServicerFunc) Servicer {
+func CounterStrike(options ...services.ServicerFunc) services.Servicer {
 	s := &counterStrikeService{
-		limiter: NewLimiter(),
+		limiter: services.NewLimiter(),
 	}
 
 	for _, o := range options {
@@ -85,7 +89,7 @@ func CounterStrike(options ...ServicerFunc) Servicer {
 }
 
 type counterStrikeService struct {
-	limiter *Limiter
+	limiter *services.Limiter
 
 	ch pushers.Channel
 }
@@ -125,7 +129,7 @@ func (s *counterStrikeService) Handle(ctx context.Context, conn net.Conn) error 
 		payload := string(buf[5:])
 
 		s.ch.Send(event.New(
-			EventOptions,
+			services.EventOptions,
 			event.Category("counterstrike"),
 			event.Protocol(conn.RemoteAddr().Network()),
 			event.Type("request"),
@@ -139,7 +143,7 @@ func (s *counterStrikeService) Handle(ctx context.Context, conn net.Conn) error 
 	} else if query == COUNTERSTRIKE_A2S_PLAYER {
 		// Challenge number
 		s.ch.Send(event.New(
-			EventOptions,
+			services.EventOptions,
 			event.Category("counterstrike"),
 			event.Protocol(conn.RemoteAddr().Network()),
 			event.Type("request"),
@@ -151,7 +155,7 @@ func (s *counterStrikeService) Handle(ctx context.Context, conn net.Conn) error 
 
 	} else if query == COUNTERSTRIKE_A2S_RULES {
 		s.ch.Send(event.New(
-			EventOptions,
+			services.EventOptions,
 			event.Category("counterstrike"),
 			event.Protocol(conn.RemoteAddr().Network()),
 			event.Type("request"),
@@ -163,7 +167,7 @@ func (s *counterStrikeService) Handle(ctx context.Context, conn net.Conn) error 
 
 	} else if query == COUNTERSTRIKE_A2S_SERVERQUERY_GETCHALLENGE {
 		s.ch.Send(event.New(
-			EventOptions,
+			services.EventOptions,
 			event.Category("counterstrike"),
 			event.Protocol(conn.RemoteAddr().Network()),
 			event.Type("request"),
@@ -175,7 +179,7 @@ func (s *counterStrikeService) Handle(ctx context.Context, conn net.Conn) error 
 
 	} else if query == COUNTERSTRIKE_A2A_PING {
 		s.ch.Send(event.New(
-			EventOptions,
+			services.EventOptions,
 			event.Category("counterstrike"),
 			event.Protocol(conn.RemoteAddr().Network()),
 			event.Type("request"),

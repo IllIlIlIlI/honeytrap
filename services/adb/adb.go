@@ -38,13 +38,17 @@ import (
 
 	"github.com/honeytrap/honeytrap/event"
 	"github.com/honeytrap/honeytrap/pushers"
+
+	"github.com/honeytrap/honeytrap/services"
+	"github.com/op/go-logging"
 )
 
 var (
-	_ = Register("adb", Adb)
+	log = logging.MustGetLogger("services/adb")
+	_ = services.Register("adb", Adb)
 )
 
-func Adb(options ...ServicerFunc) Servicer {
+func Adb(options ...services.ServicerFunc) services.Servicer {
 	s := &adbService{}
 
 	for _, o := range options {
@@ -97,7 +101,7 @@ func (s *adbService) Handle(ctx context.Context, conn net.Conn) error {
 		return nil
 	}
 	s.c.Send(event.New(
-		EventOptions,
+		services.EventOptions,
 		event.Category("adb"),
 		event.Type("connection"),
 		event.SourceAddr(conn.RemoteAddr()),
@@ -132,7 +136,7 @@ func (s *adbService) Handle(ctx context.Context, conn net.Conn) error {
 		if bytes.Equal(cmd, []byte("OPEN")) {
 			// Open a shell
 			s.c.Send(event.New(
-				EventOptions,
+				services.EventOptions,
 				event.Category("adb"),
 				event.Type("connection"),
 				event.SourceAddr(conn.RemoteAddr()),
@@ -149,7 +153,7 @@ func (s *adbService) Handle(ctx context.Context, conn net.Conn) error {
 			conn.Write(makeAdbPacket([]byte("OKAY"), localId, remoteId, []byte{}))
 			if bytes.ContainsRune(commandBuffer, '\r') {
 				s.c.Send(event.New(
-					EventOptions,
+					services.EventOptions,
 					event.Category("adb"),
 					event.Type("command"),
 					event.SourceAddr(conn.RemoteAddr()),

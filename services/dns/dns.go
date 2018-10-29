@@ -31,106 +31,83 @@
 package services
 
 import (
-	"bufio"
-	"bytes"
 	"context"
-	"io"
+	"fmt"
 	"net"
-	"net/http"
+	"reflect"
 
-	"github.com/honeytrap/honeytrap/director"
+	"github.com/miekg/dns"
+
 	"github.com/honeytrap/honeytrap/event"
+	"github.com/honeytrap/honeytrap/listener"
 	"github.com/honeytrap/honeytrap/pushers"
+
+	"github.com/honeytrap/honeytrap/services"
+	"github.com/op/go-logging"
 )
 
 var (
-	_ = Register("http-proxy", HTTPProxy)
+	log = logging.MustGetLogger("services/dns")
+	_ = services.Register("dns", DNS)
 )
 
-// HTTP
-func HTTPProxy(options ...ServicerFunc) Servicer {
-	s := &httpProxy{}
+// Dns is a placeholder
+func DNS(options ...services.ServicerFunc) services.Servicer {
+	s := &dnsService{}
 	for _, o := range options {
 		o(s)
 	}
-
-	// todo
-	// if no director set
-	// error
 	return s
 }
 
-type httpProxy struct {
+type dnsService struct {
 	c pushers.Channel
-	d director.Director
 }
 
-func (s *httpProxy) SetDirector(d director.Director) {
-	s.d = d
-}
-
-func (s *httpProxy) SetChannel(c pushers.Channel) {
+func (s *dnsService) SetChannel(c pushers.Channel) {
 	s.c = c
 }
 
-func (s *httpProxy) Handle(ctx context.Context, conn net.Conn) error {
+func (s *dnsService) Handle(ctx context.Context, conn net.Conn) error {
 	defer conn.Close()
 
-	conn2, err := s.d.Dial(conn)
-	if err != nil {
+	buff := make([]byte, 65535)
+
+	if _, ok := conn.(*listener.DummyUDPConn); ok {
+		n, err := conn.Read(buff[:])
+		if err != nil {
+			return err
+		}
+
+		buff = buff[:n]
+	} else if _, ok := conn.(*net.TCPConn); ok {
+		n, err := conn.Read(buff[:])
+		if err != nil {
+			return err
+		}
+
+		buff = buff[:n]
+	} else {
+		log.Error("Unsupported connection type: %s", reflect.TypeOf(conn))
+		return nil
+	}
+
+	req := new(dns.Msg)
+	if err := req.Unpack(buff[:]); err != nil {
 		return err
 	}
 
-	defer conn2.Close()
+	s.c.Send(event.New(
+		services.EventOptions,
+		event.Category("dns"),
+		event.Type("dns"),
+		event.SourceAddr(conn.RemoteAddr()),
+		event.DestinationAddr(conn.LocalAddr()),
+		event.Custom("dns.id", fmt.Sprintf("%d", req.Id)),
+		event.Custom("dns.opcode", fmt.Sprintf("%d", req.Opcode)),
+		event.Custom("dns.message", fmt.Sprintf("Querying for: %#q", req.Question)),
+		event.Custom("dns.questions", req.Question),
+	))
 
-	for {
-		reader := bufio.NewReader(conn)
-		req, err := http.ReadRequest(reader)
-		if err == io.EOF {
-			return nil
-		} else if err != nil {
-			return err
-		}
-
-		reqBody := &bytes.Buffer{}
-
-		dsw := io.MultiWriter(conn2, reqBody)
-
-		if err = req.Write(dsw); err == io.EOF {
-			return nil
-		} else if err != nil {
-			return err
-		}
-
-		s.c.Send(event.New(
-			SensorLow,
-			event.Service("http-proxy"),
-			event.Category("http"),
-			event.Custom("method", req.Method),
-			event.Custom("host", req.Host),
-			event.Custom("user-agent", req.UserAgent()),
-			event.Custom("referer", req.Referer()),
-			event.Custom("url", req.URL.String()),
-			event.Custom("content-length", req.ContentLength),
-			event.RemoteAddr(conn.RemoteAddr().String()),
-			event.Payload(reqBody.Bytes()),
-		))
-
-		var resp *http.Response
-
-		reader2 := bufio.NewReader(conn2)
-		resp, err = http.ReadResponse(reader2, req)
-		if err == io.EOF {
-			return nil
-		} else if err != nil {
-			return err
-		}
-
-		err = resp.Write(conn)
-		if err == io.EOF {
-			return nil
-		} else if err != nil {
-			return err
-		}
-	}
+	return nil
 }

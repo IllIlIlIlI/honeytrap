@@ -44,14 +44,16 @@ import (
 	"github.com/honeytrap/honeytrap/event"
 	"github.com/honeytrap/honeytrap/pushers"
 	"github.com/rs/xid"
+
+	"github.com/honeytrap/honeytrap/services"
 )
 
 var (
-	_ = Register("http", HTTP)
+	_ = services.Register("http", HTTP)
 )
 
 // Http is a placeholder
-func HTTP(options ...ServicerFunc) Servicer {
+func HTTP(options ...services.ServicerFunc) services.Servicer {
 	s := &httpService{
 		httpServiceConfig: httpServiceConfig{
 			Server: "Apache",
@@ -153,7 +155,7 @@ func (s *httpService) Handle(ctx context.Context, conn net.Conn) error {
 		}
 
 		s.c.Send(event.New(
-			EventOptions,
+			services.EventOptions,
 			connOptions,
 			event.Category("http"),
 			event.Type("request"),

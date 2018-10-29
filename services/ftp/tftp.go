@@ -28,7 +28,7 @@
 * logo is not reasonably feasible for technical reasons, the Appropriate Legal Notices
 * must display the words "Powered by Honeytrap" and retain the original copyright notice.
  */
-package services
+package ftp
 
 import (
 	"bufio"
@@ -38,15 +38,17 @@ import (
 
 	"github.com/honeytrap/honeytrap/event"
 	"github.com/honeytrap/honeytrap/pushers"
+
+	"github.com/honeytrap/honeytrap/services"
 )
 
 var (
-	_ = Register("tftp", TFTP)
+	_ = services.Register("tftp", TFTP)
 )
 
-func TFTP(options ...ServicerFunc) Servicer {
+func TFTP(options ...services.ServicerFunc) services.Servicer {
 	s := &tftpService{
-		limiter: NewLimiter(),
+		limiter: services.NewLimiter(),
 	}
 	for _, o := range options {
 		o(s)
@@ -64,7 +66,7 @@ type tftpFile struct {
 type tftpService struct {
 	ch pushers.Channel
 
-	limiter *Limiter
+	limiter *services.Limiter
 
 	buffers map[string]*tftpFile
 }
@@ -112,7 +114,7 @@ func (s *tftpService) Handle(ctx context.Context, conn net.Conn) error {
 			return err
 		}
 		s.ch.Send(event.New(
-			EventOptions,
+			services.EventOptions,
 			event.Category("tftp"),
 			event.Protocol(conn.RemoteAddr().Network()),
 			event.Type("tftp-read"),
@@ -150,7 +152,7 @@ func (s *tftpService) Handle(ctx context.Context, conn net.Conn) error {
 			return err
 		}
 		s.ch.Send(event.New(
-			EventOptions,
+			services.EventOptions,
 			event.Category("tftp"),
 			event.Protocol(conn.RemoteAddr().Network()),
 			event.Type("tftp-write"),
@@ -195,7 +197,7 @@ func (s *tftpService) Handle(ctx context.Context, conn net.Conn) error {
 			file := s.buffers[addr]
 			delete(s.buffers, addr)
 			s.ch.Send(event.New(
-				EventOptions,
+				services.EventOptions,
 				event.Category("tftp"),
 				event.Protocol(conn.RemoteAddr().Network()),
 				event.Type("tftp-write-file"),

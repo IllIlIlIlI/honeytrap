@@ -32,53 +32,57 @@ package services
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"net"
 
 	"github.com/honeytrap/honeytrap/director"
 	"github.com/honeytrap/honeytrap/event"
 	"github.com/honeytrap/honeytrap/listener"
 	"github.com/honeytrap/honeytrap/pushers"
-	"github.com/miekg/dns"
+
+	"github.com/honeytrap/honeytrap/services"
+	"github.com/op/go-logging"
 )
 
 var (
-	_ = Register("dns-proxy", DNSProxy)
+	log = logging.MustGetLogger("services/copy")
+	_ = services.Register("copy", Copy)
 )
 
-// Dns is a placeholder
-func DNSProxy(options ...ServicerFunc) Servicer {
-	s := &dnsProxy{}
+// Copy is a placeholder
+func Copy(options ...services.ServicerFunc) services.Servicer {
+	s := &copyService{}
 	for _, o := range options {
 		o(s)
 	}
 	return s
 }
 
-type dnsProxy struct {
+type copyService struct {
 	c pushers.Channel
 
 	d director.Director
 }
 
-func (s *dnsProxy) SetDirector(d director.Director) {
+func (s *copyService) SetDirector(d director.Director) {
 	s.d = d
 }
 
-func (s *dnsProxy) SetChannel(c pushers.Channel) {
+func (s *copyService) SetChannel(c pushers.Channel) {
 	s.c = c
 }
 
-func (s *dnsProxy) Handle(ctx context.Context, conn net.Conn) error {
+func (s *copyService) Handle(ctx context.Context, conn net.Conn) error {
 	defer conn.Close()
-
-	buff := [65535]byte{}
-
-	if _, ok := conn.(*listener.DummyUDPConn); ok {
-		n, err := conn.Read(buff[:])
-		if err != nil {
-			return err
-		}
+	switch conn.(type) {
+	case *listener.DummyUDPConn:
+		defer s.c.Send(event.New(
+			services.EventOptions,
+			event.Category("copy"),
+			event.Type("tcp"),
+			event.SourceAddr(conn.RemoteAddr()),
+			event.DestinationAddr(conn.LocalAddr()),
+		))
 
 		conn2, err := s.d.Dial(conn)
 		if err != nil {
@@ -87,59 +91,17 @@ func (s *dnsProxy) Handle(ctx context.Context, conn net.Conn) error {
 
 		defer conn2.Close()
 
-		if _, err = conn2.Write(buff[:n]); err != nil {
-			return err
-		}
-
-		req := new(dns.Msg)
-		if err := req.Unpack(buff[:n]); err != nil {
-			return err
-		}
-
-		s.c.Send(event.New(
-			EventOptions,
-			event.Category("dns-proxy"),
-			event.Type("dns"),
-			event.Protocol(conn.RemoteAddr().Network()),
-			event.SourceAddr(conn.RemoteAddr()),
-			event.DestinationAddr(conn.LocalAddr()),
-			event.Custom("dns.id", fmt.Sprintf("%d", req.Id)),
-			event.Custom("dns.opcode", fmt.Sprintf("%d", req.Opcode)),
-			event.Custom("dns.message", fmt.Sprintf("Querying for: %#q", req.Question)),
-			event.Custom("dns.questions", req.Question),
-		))
-
-		if n, err = conn2.Read(buff[:]); err != nil {
-			return err
-		}
-
-		if _, err = conn.Write(buff[:n]); err != nil {
-			return err
-		}
+		go io.Copy(conn2, conn)
+		_, err = io.Copy(conn, conn2)
 
 		return err
-	} else if _, ok := conn.(*net.TCPConn); ok {
-		n, err := conn.Read(buff[:])
-		if err != nil {
-			return err
-		}
-
-		req := new(dns.Msg)
-		if err := req.Unpack(buff[:n]); err != nil {
-			return err
-		}
-
-		s.c.Send(event.New(
-			EventOptions,
-			event.Category("dns-proxy"),
-			event.Type("dns"),
-			event.Protocol(conn.RemoteAddr().Network()),
+	case *net.TCPConn:
+		defer s.c.Send(event.New(
+			services.EventOptions,
+			event.Category("copy"),
+			event.Type("udp"),
 			event.SourceAddr(conn.RemoteAddr()),
 			event.DestinationAddr(conn.LocalAddr()),
-			event.Custom("dns.id", fmt.Sprintf("%d", req.Id)),
-			event.Custom("dns.opcode", fmt.Sprintf("%d", req.Opcode)),
-			event.Custom("dns.message", fmt.Sprintf("Querying for: %#q", req.Question)),
-			event.Custom("dns.questions", req.Question),
 		))
 
 		conn2, err := s.d.Dial(conn)
@@ -149,20 +111,10 @@ func (s *dnsProxy) Handle(ctx context.Context, conn net.Conn) error {
 
 		defer conn2.Close()
 
-		if _, err = conn2.Write(buff[:n]); err != nil {
-			return err
-		}
-
-		if n, err = conn2.Read(buff[:]); err != nil {
-			return err
-		}
-
-		if _, err = conn.Write(buff[:n]); err != nil {
-			return err
-		}
-
-		return nil
-	} else {
+		go io.Copy(conn2, conn)
+		_, err = io.Copy(conn, conn2)
+		return err
+	default:
 		return nil
 	}
 }

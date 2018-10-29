@@ -46,13 +46,14 @@ import (
 	tls "github.com/honeytrap/honeytrap/services/ja3/crypto/tls"
 
 	"github.com/honeytrap/honeytrap/pushers"
+	"github.com/honeytrap/honeytrap/services"
 )
 
 var (
-	_ = Register("https", HTTPS)
+	_ = services.Register("https", HTTPS)
 )
 
-func HTTPS(options ...ServicerFunc) Servicer {
+func HTTPS(options ...services.ServicerFunc) services.Servicer {
 	s := &httpsService{
 		httpService: httpService{
 			httpServiceConfig: httpServiceConfig{
@@ -163,7 +164,7 @@ func (s *httpsService) Handle(ctx context.Context, conn net.Conn) error {
 
 	if err := tlsConn.Handshake(); err != nil {
 		s.c.Send(event.New(
-			EventOptions,
+			services.EventOptions,
 			event.Category("https"),
 			event.Type("handshake-failed"),
 			event.SourceAddr(conn.RemoteAddr()),

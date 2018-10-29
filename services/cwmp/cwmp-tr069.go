@@ -43,6 +43,10 @@ import (
 
 	"github.com/honeytrap/honeytrap/event"
 	"github.com/honeytrap/honeytrap/pushers"
+
+	h "github.com/honeytrap/honeytrap/services/http"
+	"github.com/honeytrap/honeytrap/services"
+	"github.com/op/go-logging"
 )
 
 /* Example config:
@@ -54,10 +58,11 @@ port="tcp/3890"
 */
 
 var (
-	_ = Register("cwmp", CWMP)
+	log = logging.MustGetLogger("services/cwmp")
+	_ = services.Register("cwmp", CWMP)
 )
 
-func CWMP(options ...ServicerFunc) Servicer {
+func CWMP(options ...services.ServicerFunc) services.Servicer {
 	s := &cwmpService{}
 
 	for _, o := range options {
@@ -152,7 +157,7 @@ func (s *cwmpService) Handle(ctx context.Context, conn net.Conn) error {
 			msg, err := parseXML([]byte(requestBody))
 			// Send the event even if an error occurs; error out only later
 			s.c.Send(event.New(
-				EventOptions,
+				services.EventOptions,
 				event.Category("cwmp"),
 				event.Type("request"),
 				event.SourceAddr(conn.RemoteAddr()),
@@ -164,7 +169,7 @@ func (s *cwmpService) Handle(ctx context.Context, conn net.Conn) error {
 				event.Custom("http.body", string(requestBody)),
 				event.Custom("cwmp.method", msg.method),
 				event.Custom("cwmp.argumentsXML", msg.argumentsXML),
-				Headers(req.Header),
+				h.Headers(req.Header),
 			))
 			if err != nil {
 				return err

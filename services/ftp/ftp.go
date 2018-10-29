@@ -14,7 +14,7 @@ import (
 
 var (
 	_   = services.Register("ftp", FTP)
-	log = logging.MustGetLogger("services/ftp")
+	log = logging.MustGetLogger("services")
 )
 
 func FTP(options ...services.ServicerFunc) services.Servicer {

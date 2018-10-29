@@ -37,14 +37,15 @@ import (
 	"os"
 
 	"github.com/honeytrap/honeytrap/pushers"
+	"github.com/honeytrap/honeytrap/services"
 )
 
 var (
-	_ = Register("ntp", NTP)
+	_ = services.Register("ntp", NTP)
 )
 
 // Ntp is a placeholder
-func NTP(options ...ServicerFunc) Servicer {
+func NTP(options ...services.ServicerFunc) services.Servicer {
 	s := &ntpService{}
 	for _, o := range options {
 		o(s)

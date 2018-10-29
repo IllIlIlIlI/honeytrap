@@ -31,86 +31,108 @@
 package services
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"io"
 	"net"
+	"net/http"
 
 	"github.com/honeytrap/honeytrap/director"
 	"github.com/honeytrap/honeytrap/event"
-	"github.com/honeytrap/honeytrap/listener"
 	"github.com/honeytrap/honeytrap/pushers"
+
+	"github.com/honeytrap/honeytrap/services"
 )
 
 var (
-	_ = Register("copy", Copy)
+	_ = services.Register("http-proxy", HTTPProxy)
 )
 
-// Copy is a placeholder
-func Copy(options ...ServicerFunc) Servicer {
-	s := &copyService{}
+// HTTP
+func HTTPProxy(options ...services.ServicerFunc) services.Servicer {
+	s := &httpProxy{}
 	for _, o := range options {
 		o(s)
 	}
+
+	// todo
+	// if no director set
+	// error
 	return s
 }
 
-type copyService struct {
+type httpProxy struct {
 	c pushers.Channel
-
 	d director.Director
 }
 
-func (s *copyService) SetDirector(d director.Director) {
+func (s *httpProxy) SetDirector(d director.Director) {
 	s.d = d
 }
 
-func (s *copyService) SetChannel(c pushers.Channel) {
+func (s *httpProxy) SetChannel(c pushers.Channel) {
 	s.c = c
 }
 
-func (s *copyService) Handle(ctx context.Context, conn net.Conn) error {
+func (s *httpProxy) Handle(ctx context.Context, conn net.Conn) error {
 	defer conn.Close()
-	switch conn.(type) {
-	case *listener.DummyUDPConn:
-		defer s.c.Send(event.New(
-			EventOptions,
-			event.Category("copy"),
-			event.Type("tcp"),
-			event.SourceAddr(conn.RemoteAddr()),
-			event.DestinationAddr(conn.LocalAddr()),
-		))
 
-		conn2, err := s.d.Dial(conn)
-		if err != nil {
+	conn2, err := s.d.Dial(conn)
+	if err != nil {
+		return err
+	}
+
+	defer conn2.Close()
+
+	for {
+		reader := bufio.NewReader(conn)
+		req, err := http.ReadRequest(reader)
+		if err == io.EOF {
+			return nil
+		} else if err != nil {
 			return err
 		}
 
-		defer conn2.Close()
+		reqBody := &bytes.Buffer{}
 
-		go io.Copy(conn2, conn)
-		_, err = io.Copy(conn, conn2)
+		dsw := io.MultiWriter(conn2, reqBody)
 
-		return err
-	case *net.TCPConn:
-		defer s.c.Send(event.New(
-			EventOptions,
-			event.Category("copy"),
-			event.Type("udp"),
-			event.SourceAddr(conn.RemoteAddr()),
-			event.DestinationAddr(conn.LocalAddr()),
-		))
-
-		conn2, err := s.d.Dial(conn)
-		if err != nil {
+		if err = req.Write(dsw); err == io.EOF {
+			return nil
+		} else if err != nil {
 			return err
 		}
 
-		defer conn2.Close()
+		s.c.Send(event.New(
+			services.SensorLow,
+			event.Service("http-proxy"),
+			event.Category("http"),
+			event.Custom("method", req.Method),
+			event.Custom("host", req.Host),
+			event.Custom("user-agent", req.UserAgent()),
+			event.Custom("referer", req.Referer()),
+			event.Custom("url", req.URL.String()),
+			event.Custom("content-length", req.ContentLength),
+			event.RemoteAddr(conn.RemoteAddr().String()),
+			event.Payload(reqBody.Bytes()),
+		))
 
-		go io.Copy(conn2, conn)
-		_, err = io.Copy(conn, conn2)
-		return err
-	default:
-		return nil
+		var resp *http.Response
+
+		reader2 := bufio.NewReader(conn2)
+		resp, err = http.ReadResponse(reader2, req)
+		if err == io.EOF {
+			return nil
+		} else if err != nil {
+			return err
+		}
+
+		err = resp.Write(conn)
+		if err == io.EOF {
+			return nil
+		} else if err != nil {
+			return err
+		}
 	}
 }

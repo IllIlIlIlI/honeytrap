@@ -32,78 +32,59 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"net"
-	"reflect"
-
-	"github.com/miekg/dns"
 
 	"github.com/honeytrap/honeytrap/event"
 	"github.com/honeytrap/honeytrap/listener"
 	"github.com/honeytrap/honeytrap/pushers"
+	"io"
+
+	"github.com/honeytrap/honeytrap/services"
 )
 
 var (
-	_ = Register("dns", DNS)
+	_ = services.Register("echo", Echo)
 )
 
-// Dns is a placeholder
-func DNS(options ...ServicerFunc) Servicer {
-	s := &dnsService{}
+// Echo is a placeholder
+func Echo(options ...services.ServicerFunc) services.Servicer {
+	s := &echoService{}
 	for _, o := range options {
 		o(s)
 	}
 	return s
 }
 
-type dnsService struct {
+type echoService struct {
 	c pushers.Channel
 }
 
-func (s *dnsService) SetChannel(c pushers.Channel) {
+func (s *echoService) SetChannel(c pushers.Channel) {
 	s.c = c
 }
 
-func (s *dnsService) Handle(ctx context.Context, conn net.Conn) error {
-	defer conn.Close()
-
-	buff := make([]byte, 65535)
-
-	if _, ok := conn.(*listener.DummyUDPConn); ok {
-		n, err := conn.Read(buff[:])
-		if err != nil {
-			return err
-		}
-
-		buff = buff[:n]
-	} else if _, ok := conn.(*net.TCPConn); ok {
-		n, err := conn.Read(buff[:])
-		if err != nil {
-			return err
-		}
-
-		buff = buff[:n]
-	} else {
-		log.Error("Unsupported connection type: %s", reflect.TypeOf(conn))
-		return nil
-	}
-
-	req := new(dns.Msg)
-	if err := req.Unpack(buff[:]); err != nil {
+func (s *echoService) Handle(ctx context.Context, conn net.Conn) error {
+	if _, ok := conn.(*listener.DummyUDPConn); !ok {
+		_, err := io.Copy(conn, conn)
 		return err
 	}
 
+	defer conn.Close()
+
+	buff := [65535]byte{}
+
+	n, err := conn.Read(buff[:])
+	if err != nil {
+		return err
+	}
 	s.c.Send(event.New(
-		EventOptions,
-		event.Category("dns"),
-		event.Type("dns"),
+		services.EventOptions,
+		event.Category("echo"),
 		event.SourceAddr(conn.RemoteAddr()),
 		event.DestinationAddr(conn.LocalAddr()),
-		event.Custom("dns.id", fmt.Sprintf("%d", req.Id)),
-		event.Custom("dns.opcode", fmt.Sprintf("%d", req.Opcode)),
-		event.Custom("dns.message", fmt.Sprintf("Querying for: %#q", req.Question)),
-		event.Custom("dns.questions", req.Question),
+		event.Payload(buff[:n]),
 	))
 
-	return nil
+	_, err = conn.Write(buff[:n])
+	return err
 }

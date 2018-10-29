@@ -42,15 +42,19 @@ import (
 
 	"github.com/honeytrap/honeytrap/event"
 	"github.com/honeytrap/honeytrap/pushers"
+
+	"github.com/honeytrap/honeytrap/services"
+	"github.com/op/go-logging"
 )
 
 var (
-	_ = Register("memcached", Memcached)
+	log = logging.MustGetLogger("services/memcached")
+	_ = services.Register("memcached", Memcached)
 )
 
-func Memcached(options ...ServicerFunc) Servicer {
+func Memcached(options ...services.ServicerFunc) services.Servicer {
 	s := &memcachedService{
-		limiter: NewLimiter(),
+		limiter: services.NewLimiter(),
 	}
 
 	for _, o := range options {
@@ -61,7 +65,7 @@ func Memcached(options ...ServicerFunc) Servicer {
 }
 
 type memcachedService struct {
-	limiter *Limiter
+	limiter *services.Limiter
 
 	ch pushers.Channel
 }
@@ -96,7 +100,7 @@ func (s *memcachedService) Handle(ctx context.Context, conn net.Conn) error {
 		}
 
 		s.ch.Send(event.New(
-			EventOptions,
+			services.EventOptions,
 			event.Category("memcached"),
 			event.Protocol(conn.RemoteAddr().Network()),
 			event.Type("memcached-command"),
@@ -210,7 +214,7 @@ END\r\n
 			b.Discard(count)
 
 			s.ch.Send(event.New(
-				EventOptions,
+				services.EventOptions,
 				event.Category("memcached"),
 				event.Protocol(conn.RemoteAddr().Network()),
 				event.Type(fmt.Sprintf("memcached-%s", string(parts[0]))),
