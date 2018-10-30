@@ -47,7 +47,7 @@ var (
 	_ = pushers.Register("splunk", New)
 )
 
-var log = logging.MustGetLogger("channels:splunk")
+var log = logging.MustGetLogger("channels/splunk")
 
 // Backend defines a struct which provides a channel for delivery
 // push messages to an elasticsearch api.

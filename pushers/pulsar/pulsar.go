@@ -50,7 +50,7 @@ import (
 )
 
 var (
-	_ = pushers.Register("pulsar", New)
+	_ = pushers.Register("channels/pulsar", New)
 )
 
 var (

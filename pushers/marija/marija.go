@@ -49,7 +49,7 @@ var (
 	_ = pushers.Register("marija", New)
 )
 
-var log = logging.MustGetLogger("channels:marija")
+var log = logging.MustGetLogger("channels/marija")
 
 // Backend defines a struct which provides a channel for delivery
 // push messages to an elasticsearch api.

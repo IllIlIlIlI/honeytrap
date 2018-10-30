@@ -45,7 +45,7 @@ import (
 	logging "github.com/op/go-logging"
 )
 
-var log = logging.MustGetLogger("honeytrap:channels:slack")
+var log = logging.MustGetLogger("channels/slack")
 
 var (
 	_ = pushers.Register("slack", New)

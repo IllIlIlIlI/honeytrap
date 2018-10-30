@@ -46,7 +46,7 @@ var (
 )
 
 var (
-	log = logging.MustGetLogger("rabbitmq")
+	log = logging.MustGetLogger("channels/rabbitmq")
 )
 
 type AMQPConfig struct {
