@@ -44,9 +44,9 @@ import (
 	"github.com/op/go-logging"
 )
 
-var log = logging.MustGetLogger("services/redis")
 
 var (
+	log = logging.MustGetLogger("services/redis")
 	_ = services.Register("redis", REDIS)
 )
 

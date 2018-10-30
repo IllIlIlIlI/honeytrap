@@ -69,8 +69,8 @@ services=[ "ldap" ]
 */
 
 var (
-	_   = services.Register("ldap", LDAP)
 	log = logging.MustGetLogger("services/ldap")
+	_   = services.Register("ldap", LDAP)
 )
 
 // LDAP service setup

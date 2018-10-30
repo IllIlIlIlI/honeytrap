@@ -47,9 +47,9 @@ import (
 	logging "github.com/op/go-logging"
 )
 
-var log = logging.MustGetLogger("services/ipp")
 
 var (
+	log = logging.MustGetLogger("services/ipp")
 	_ = services.Register("ipp", IPP)
 )
 

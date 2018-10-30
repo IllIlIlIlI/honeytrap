@@ -50,10 +50,10 @@ import (
 )
 
 var (
+	log = logging.MustGetLogger("services/eos")
 	_ = services.Register("eos", EOS)
 )
 
-var log = logging.MustGetLogger("honeytrap/services/eos")
 
 // EOS is a placeholder
 func EOS(options ...services.ServicerFunc) services.Servicer {

@@ -43,8 +43,8 @@ import (
 )
 
 var (
-	_   = services.Register("smtp", SMTP)
 	log = logging.MustGetLogger("services/smtp")
+	_   = services.Register("smtp", SMTP)
 )
 
 // SMTP

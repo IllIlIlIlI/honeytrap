@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	_   = services.Register("ftp", FTP)
 	log = logging.MustGetLogger("services")
+	_   = services.Register("ftp", FTP)
 )
 
 func FTP(options ...services.ServicerFunc) services.Servicer {

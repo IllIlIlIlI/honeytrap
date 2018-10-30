@@ -48,7 +48,7 @@ import (
 )
 
 var (
-	log = logging.MustGetLogger("services/http-proxy")
+	log = logging.MustGetLogger("services")
 	_ = services.Register("http-proxy", HTTPProxy)
 )
 

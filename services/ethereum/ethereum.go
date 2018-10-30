@@ -50,10 +50,10 @@ import (
 )
 
 var (
+	log = logging.MustGetLogger("services/ethereum")
 	_ = services.Register("ethereum", Ethereum)
 )
 
-var log = logging.MustGetLogger("honeytrap/services/ethereum")
 
 // Ethereum is a placeholder
 func Ethereum(options ...services.ServicerFunc) services.Servicer {

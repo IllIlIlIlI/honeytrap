@@ -46,9 +46,9 @@ import (
 	"github.com/honeytrap/honeytrap/services"
 )
 
-var log = logging.MustGetLogger("services/vnc")
 
 var (
+	log = logging.MustGetLogger("services/vnc")
 	_ = services.Register("vnc", Vnc)
 )
 
