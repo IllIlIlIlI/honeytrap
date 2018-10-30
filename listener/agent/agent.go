@@ -114,11 +114,12 @@ func (al *agentListener) serv(c *conn2) {
 		return
 	}
 
+	protocol := h.ProtocolVersion
 	version := h.Version
 	shortCommitID := h.ShortCommitID
 	token := h.Token
 
-	log.Infof(color.YellowString("Agent connected (version=%s, commitid=%s, token=%s)...", version, shortCommitID, token))
+	log.Infof(color.YellowString("Agent connected (version=%s, commitid=%s, token=%s, protocol=%d)...", version, shortCommitID, token, protocol))
 	defer log.Infof(color.YellowString("Agent disconnected"))
 
 	c.send(HandshakeResponse{
