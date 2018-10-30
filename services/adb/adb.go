@@ -1,6 +1,6 @@
 /*
 * Honeytrap
-* Copyright (C) 2016-2017 DutchSec (adbs://dutchsec.com/)
+* Copyright (C) 2016-2017 DutchSec (https://dutchsec.com/)
 *
 * This program is free software; you can redistribute it and/or modify it under
 * the terms of the GNU Affero General Public License version 3 as published by the
@@ -15,7 +15,7 @@
 * version 3 along with this program in the file "LICENSE".  If not, see
 * <adb://www.gnu.org/licenses/agpl-3.0.txt>.
 *
-* See adbs://honeytrap.io/ for more details. All requests should be sent to
+* See https://honeytrap.io/ for more details. All requests should be sent to
 * licensing@honeytrap.io
 *
 * The interactive user interfaces in modified source and object code versions
