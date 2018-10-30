@@ -43,9 +43,12 @@ import (
 	"github.com/honeytrap/honeytrap/pushers"
 
 	"github.com/honeytrap/honeytrap/services"
+
+	logging "github.com/op/go-logging"
 )
 
 var (
+	log = logging.MustGetLogger("services/http-proxy")
 	_ = services.Register("http-proxy", HTTPProxy)
 )
 
@@ -56,9 +59,10 @@ func HTTPProxy(options ...services.ServicerFunc) services.Servicer {
 		o(s)
 	}
 
-	// todo
-	// if no director set
-	// error
+	if s.d == nil {
+		log.Error("Director not set for http-proxy")
+	}
+
 	return s
 }
 

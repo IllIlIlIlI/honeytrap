@@ -54,6 +54,11 @@ func DNSProxy(options ...services.ServicerFunc) services.Servicer {
 	for _, o := range options {
 		o(s)
 	}
+
+	if s.d == nil {
+		log.Error("Director not set for dns-proxy")
+	}
+
 	return s
 }
 

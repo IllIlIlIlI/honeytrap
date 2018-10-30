@@ -69,6 +69,10 @@ func Proxy(options ...services.ServicerFunc) services.Servicer {
 		o(service)
 	}
 
+	if service.d == nil {
+		log.Error("Director not set for ssh-proxy")
+	}
+
 	return service
 }
 
