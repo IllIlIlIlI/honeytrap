@@ -2,7 +2,7 @@
 
 /*
 * Honeytrap
-* Copyright (C) 2016-2017 DutchSec (https://dutchsec.com/)
+* Copyright (C) 2016-2018 DutchSec (https://dutchsec.com/)
 *
 * This program is free software; you can redistribute it and/or modify it under
 * the terms of the GNU Affero General Public License version 3 as published by the
