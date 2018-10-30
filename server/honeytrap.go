@@ -440,7 +440,7 @@ func (hc *Honeytrap) Run(ctx context.Context) {
 		}
 
 		if x.Type == "" {
-			log.Error("Error parsing configuration of service %s: type not set", key)
+			log.Error("Error parsing configuration of director %s: type not set", key)
 			continue
 		}
 

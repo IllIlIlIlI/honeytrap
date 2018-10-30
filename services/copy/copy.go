@@ -79,7 +79,7 @@ func (s *copyService) Handle(ctx context.Context, conn net.Conn) error {
 		defer s.c.Send(event.New(
 			services.EventOptions,
 			event.Category("copy"),
-			event.Type("tcp"),
+			event.Type("udp"),
 			event.SourceAddr(conn.RemoteAddr()),
 			event.DestinationAddr(conn.LocalAddr()),
 		))
@@ -99,7 +99,7 @@ func (s *copyService) Handle(ctx context.Context, conn net.Conn) error {
 		defer s.c.Send(event.New(
 			services.EventOptions,
 			event.Category("copy"),
-			event.Type("udp"),
+			event.Type("tcp"),
 			event.SourceAddr(conn.RemoteAddr()),
 			event.DestinationAddr(conn.LocalAddr()),
 		))

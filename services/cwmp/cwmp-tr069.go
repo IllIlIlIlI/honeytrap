@@ -53,7 +53,10 @@ import (
 
 [service.cwmp]
 type="cwmp"
+
+[[port]]
 port="tcp/3890"
+services=["cwmp"]
 
 */
 

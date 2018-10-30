@@ -32,7 +32,6 @@ package tap
 
 import (
 	"context"
-	"fmt"
 	"net"
 
 	"github.com/honeytrap/honeytrap/listener"
@@ -92,8 +91,6 @@ func (l *tapListener) Start(ctx context.Context) error {
 		DeviceType: water.TAP,
 	}
 
-	// config.Name = "O_O"
-
 	ifce, err := water.New(config)
 	if err != nil {
 		return err
@@ -103,8 +100,6 @@ func (l *tapListener) Start(ctx context.Context) error {
 
 	go func() {
 		for {
-			fmt.Println("BLA")
-
 			frame.Resize(1500)
 
 			n, err := ifce.Read([]byte(frame))
