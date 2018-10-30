@@ -60,6 +60,7 @@ import (
 	"github.com/honeytrap/honeytrap/services"
 	_ "github.com/honeytrap/honeytrap/services/adb"
 	_ "github.com/honeytrap/honeytrap/services/copy"
+	_ "github.com/honeytrap/honeytrap/services/couchdb"
 	_ "github.com/honeytrap/honeytrap/services/counterstrike"
 	_ "github.com/honeytrap/honeytrap/services/cwmp"
 	_ "github.com/honeytrap/honeytrap/services/dns"
