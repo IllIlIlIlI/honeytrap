@@ -44,7 +44,7 @@ import (
 	"github.com/songgao/packets/ethernet"
 )
 
-var log = logging.MustGetLogger("honeytrap:listener:tap")
+var log = logging.MustGetLogger("listeners/tap")
 
 var (
 	_ = listener.Register("tap", New)

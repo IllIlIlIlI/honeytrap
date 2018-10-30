@@ -48,7 +48,7 @@ var (
 	EventCategoryUDP = event.Category("udp")
 )
 
-var log = logging.MustGetLogger("listener/tun")
+var log = logging.MustGetLogger("listeners/tun")
 
 var (
 	_ = listener.Register("tun", New)

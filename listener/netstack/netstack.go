@@ -42,7 +42,7 @@ var (
 	SensorNetstack = event.Sensor("netstack")
 )
 
-var log = logging.MustGetLogger("listener/netstack")
+var log = logging.MustGetLogger("listeners/netstack")
 
 var (
 	_ = listener.Register("netstack", New)
