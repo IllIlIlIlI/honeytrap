@@ -73,7 +73,7 @@ func New(options ...func(pushers.Channel) error) (pushers.Channel, error) {
 		return nil, fmt.Errorf("AMQP queue not set")
 	}
 
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	conn, err := amqp.Dial(c.AMQPConfig.Address)
 	if err != nil {
 		return nil, err
 	}
