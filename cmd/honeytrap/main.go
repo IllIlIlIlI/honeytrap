@@ -158,11 +158,16 @@ func serve(c *cli.Context) error {
 
 	options = append(options, server.WithToken())
 
+	profile := false
 	if c.GlobalBool("cpu-profile") {
 		options = append(options, server.WithCPUProfiler())
+		profile = true
 	}
 
 	if c.GlobalBool("mem-profile") {
+		if profile {
+			return cli.NewExitError("You can't enable both cpu and mem profile. Choose One.", 1)
+		}
 		options = append(options, server.WithMemoryProfiler())
 	}
 
