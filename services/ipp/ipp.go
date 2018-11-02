@@ -185,10 +185,5 @@ func (s *ippService) Handle(ctx context.Context, conn net.Conn) error {
 		Body:  ioutil.NopCloser(rbody), //need io.ReadCloser,
 	}
 
-	if err := resp.Write(conn); err != nil {
-		log.Error("error writing response: %s", err.Error())
-		return err
-	}
-
-	return nil
+	return resp.Write(conn)
 }
