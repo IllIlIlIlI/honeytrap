@@ -65,6 +65,7 @@ import (
 	_ "github.com/honeytrap/honeytrap/services/cwmp"
 	_ "github.com/honeytrap/honeytrap/services/dns"
 	_ "github.com/honeytrap/honeytrap/services/echo"
+	_ "github.com/honeytrap/honeytrap/services/claymore"
 	_ "github.com/honeytrap/honeytrap/services/elasticsearch"
 	_ "github.com/honeytrap/honeytrap/services/eos"
 	_ "github.com/honeytrap/honeytrap/services/ethereum"
